@@ -1,12 +1,12 @@
 ---
-- name: download aap.tar.gz to install controller
+- name: Download aap.tar.gz to install controller
   hosts: localhost
   gather_facts: false
 
   tasks:
-    - name: get yourself some updated workshop roles
-      command: ansible-galaxy collection install --verbose --force-with-deps ansible.workshops
-      
+    - name: Get yourself some updated workshop roles
+      ansible.builtin.command: ansible-galaxy collection install --verbose --force-with-deps ansible.workshops
+
     - command:
         cmd: echo {{ offline_token }} | sed 's/./& /g'
 
@@ -24,7 +24,7 @@
     admin_password: "ansible123!"
     aap_dir: "/home/{{ username }}/aap_install"
     username: "{{ ansible_user }}"
-    student_user: student
+    student_username: student
     student_password: learn_ansible
     # Registry to pull EE images from during installation
     ee_registry_name: "registry.redhat.io"
