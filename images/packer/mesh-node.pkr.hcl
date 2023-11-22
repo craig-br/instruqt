@@ -1,3 +1,16 @@
+packer {
+  required_plugins {
+    googlecompute = {
+      source  = "github.com/hashicorp/googlecompute"
+      version = ">= 1.1.1"
+    }
+    ansible = {
+      source  = "github.com/hashicorp/ansible"
+      version = ">= 1.1.0"
+    }
+  }
+}
+
 variable "project_id" {
     type    = string
     default = "red-hat-mbu"
@@ -19,6 +32,7 @@ variable "ansible_vars_file" {
 }
 variable "ansible_vault_password_file" {
     type    = string
+    # default = null
     default = "${env("ANSIBLE_VAULT_PASSWORD_FILE")}"
 }
 
@@ -57,6 +71,5 @@ build {
       user = "rhel"
       extra_arguments = local.extra_args
       use_proxy = false
-      ansible_env_vars = ["ANSIBLE_VAULT_PASSWORD_FILE=${var.ansible_vault_password_file}"]
     }
 }

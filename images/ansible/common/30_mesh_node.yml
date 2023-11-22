@@ -1,4 +1,11 @@
 ## Common instance tasks
+- name: Install OS packages needed for tasks
+  ansible.builtin.dnf:
+    name:
+      - unzip
+      - ansible-core
+    state: present
+
 - name: Check if AAP bundle file exists
   ansible.builtin.stat:
     path: "/tmp/aap.tar.gz"
@@ -17,35 +24,32 @@
           grant_type: "refresh_token"
           client_id: "rhsm-api"
           refresh_token: "{{ offline_token }}"
-      register: temp_token
-      until: temp_token is not failed
-      retries: 15
-      delay: 5
+      register: __temp_token
+      until: __temp_token is not failed
+      retries: 30
+      delay: 1
 
     - name: Download aap.tar.gz
       ansible.builtin.get_url:
         url: "https://api.access.redhat.com/management/v1/images/{{ provided_sha_value }}/download"
         headers:
           accept: "application/json"
-          Authorization: "Bearer {{ temp_token.json.access_token }}"
+          Authorization: "Bearer {{ __temp_token.json.access_token }}"
         dest: "/tmp/aap.tar.gz"
         checksum: "sha256: {{ provided_sha_value }}"
         mode: '0644'
-      register: download_aap_tarball
-      until: download_aap_tarball is not failed
-      retries: 15
-      delay: 20
-  rescue:
-    - name: Print error message
-      ansible.builtin.debug:
-        msg: "Unable to get offline token and download AAP setup bundle."
+        owner: "{{ ansible_user }}"
+      register: __download_aap_tarball
+      until: __download_aap_tarball is not failed
+      retries: 180
+      delay: 1
 
-- name: Create directory for automation controller installer files
+- name: Create directory for automation controller
   ansible.builtin.file:
     path: "{{ aap_dir }}"
+    state: directory
     owner: "{{ ansible_user }}"
     mode: '0755'
-    state: directory
 
 - name: Extract AAP tar.gz install
   ansible.builtin.unarchive:
@@ -76,12 +80,6 @@
   when: (instance_pip_packages is defined) and (instance_pip_packages | length > 0)
   tags:
     - controller-config
-
-- name: Install unzip OS package for AWS install
-  ansible.builtin.dnf:
-    name:
-      - unzip
-    state: present
 
 - name: Download AWS CLI for S3 downloads
   ansible.builtin.unarchive:
